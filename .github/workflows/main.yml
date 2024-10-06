@@ -1,0 +1,79 @@
+name: Tests
+on:
+  pull_request:
+    branches: 
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (E2E)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Create
+        run: az group create
+          --name ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          --location ${{ vars.AZURE_LOCATION }}
+
+      - name: Initialisation
+        run: terraform init
+
+      - name: Format
+        run: terraform fmt -check
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        continue-on-error: false
+        run: |
+          terraform plan \
+            -var subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            -var resource_group_name=${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            -var name=${{ vars.AZURE_RESOURCE_NAME }} \
+            -var location=${{ vars.AZURE_LOCATION }} \
+            -var registry_id=${{ secrets.AZURE_REGISTRY_ID }}
+
+      - name: Apply
+        continue-on-error: true
+        run: |
+          terraform apply \
+            -var subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            -var resource_group_name=${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            -var name=${{ vars.AZURE_RESOURCE_NAME }} \
+            -var location=${{ vars.AZURE_LOCATION }} \
+            -var registry_id=${{ secrets.AZURE_REGISTRY_ID }} \
+            -auto-approve
+
+      - name: Destroy
+        run: |
+          terraform destroy \
+            -var subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            -var resource_group_name=${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            -var name=${{ vars.AZURE_RESOURCE_NAME }} \
+            -var location=${{ vars.AZURE_LOCATION }} \
+            -var registry_id=${{ secrets.AZURE_REGISTRY_ID }} \
+            -auto-approve
+
+      - name: Delete
+        run: |
+          az group delete \
+            --name ${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            --yes
+        if: always()
