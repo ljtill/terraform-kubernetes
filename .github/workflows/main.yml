@@ -27,9 +27,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Create
-        run: az group create
-          --name ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
-          --location ${{ vars.AZURE_LOCATION }}
+        run: |
+          az group create \
+            --name ${{ vars.AZURE_RESOURCE_GROUP_NAME }} \
+            --location ${{ vars.AZURE_LOCATION }}
 
       - name: Initialisation
         run: terraform init
