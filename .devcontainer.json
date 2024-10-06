@@ -1,0 +1,17 @@
+{
+    "name": "Kubernetes",
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/devcontainers/features/terraform:1": {},
+        "ghcr.io/ljtill/features/kubectl:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "github.vscode-github-actions",
+                "ms-kubernetes-tools.vscode-aks-tools"
+            ]
+        }
+    }
+}
